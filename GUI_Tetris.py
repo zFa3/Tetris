@@ -8,6 +8,13 @@ class Tetris:
         self.BACKGROUND_PIECE = " "
         self.WALL_PIECE = "|"
         self.BOTTOM_PIECE = "_"
+        '''
+        self.ACIVE_PIECE = 1
+        self.PASSIVE_PIECE = 2
+        self.BACKGROUND_PIECE = 3
+        self.WALL_PIECE = 4
+        self.BOTTOM_PIECE = 5
+        '''
         self.gameActive = True
 
         # width and height
@@ -32,10 +39,10 @@ class Tetris:
 
             # J Piece - Clockwise rotaations
             1:[
-                [self.U, self.R, self.R + self.R, self.C],
-                [self.R, self.D, self.D + self.D, self.C],
-                [self.D, self.L, self.L + self.L, self.C],
-                [self.L, self.U, self.U + self.U, self.C]
+                [self.C, self.L, self.L + self.U, self.R],
+                [self.C, self.U, self.U + self.R, self.D],
+                [self.C, self.R, self.R + self.D, self.L],
+                [self.C, self.D, self.D + self.L, self.U]
             ],
             # L Piece - Clockwise rotations
             2:[
@@ -86,8 +93,7 @@ class Tetris:
         self.fps = 1
         self.tps = 15
         self.board = []
-        self.set_board()
-    
+        self.board = self.set_board()
 
         self.SIDE_LEN = 600
         self.TILE_SIZE = 20
@@ -98,6 +104,7 @@ class Tetris:
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
         self.game_canvas = tk.Canvas(self.root)
         self.game_canvas.config(background="#C0FFEE")
+        self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
 
         self.root.bind("<Up>", self.keypress)
         self.root.bind("<Left>", self.keypress)
@@ -112,18 +119,42 @@ class Tetris:
         return currentBoard
 
     def rotate_piece(self, currentBoard):
+        if "".join(currentBoard).count(self.ACIVE_PIECE):
+            a = self.piece_rotation
+            self.piece_rotation = (self.piece_rotation + 1) % len(self.pieces[self.current_piece])
+            for i in self.pieces[self.current_piece][self.piece_rotation]:
+                if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
+                    uh = self.pieceCenter
+                    self.pieceCenter += self.L
+                    board, ans = self.rotate_piece_once(currentBoard[:])
+                    if ans:
+                        return board, ans
+                    else:
+                        self.pieceCenter = uh + self.R
+                        board, ans = self.rotate_piece_once(currentBoard[:])
+                        if ans:
+                            return board, ans
+                        else:
+                            self.pieceCenter = uh, self.piece_rotation = a; return currentBoard, False
+            currentBoard = self.clear_active(currentBoard)
+            for i in self.pieces[self.current_piece][self.piece_rotation]:
+                currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
+            return currentBoard, True
+    
+    def rotate_piece_once(self, currentBoard):
         a = self.piece_rotation
         self.piece_rotation = (self.piece_rotation + 1) % len(self.pieces[self.current_piece])
         for i in self.pieces[self.current_piece][self.piece_rotation]:
             if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
-                self.piece_rotation = a; return currentBoard
+                self.piece_rotation = a; return currentBoard, False
         currentBoard = self.clear_active(currentBoard)
         for i in self.pieces[self.current_piece][self.piece_rotation]:
             currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
-        return currentBoard
+        return currentBoard, True
 
     def set_bag(self):
         self.bag = [i + 1 for i in range(len(self.pieces))]
+        #self.bag = [6 for i in range(len(self.pieces))]
         for _ in range(self.shuffle_bag):
             a, b = rd.randint(0, len(self.pieces) - 1), rd.randint(0, len(self.pieces) - 1)
             a1 = self.bag[a]
@@ -131,14 +162,15 @@ class Tetris:
             self.bag[b] = a1
 
     def set_board(self):
-        self.board = []
+        board = []
         for _ in range(self.dimensions[1]):
-            self.board.append(self.WALL_PIECE)
+            board.append(self.WALL_PIECE)
             for _ in range(self.dimensions[0]):
-                self.board.append(self.BACKGROUND_PIECE)
-            self.board.append(self.WALL_PIECE)
+                board.append(self.BACKGROUND_PIECE)
+            board.append(self.WALL_PIECE)
         for _ in range((self.dimensions[0] + 3)):
-            self.board.append(self.BOTTOM_PIECE)
+            board.append(self.BOTTOM_PIECE)
+        return board
 
     def add_piece(self):
         if self.board.count(self.ACIVE_PIECE) == 0:
@@ -148,6 +180,8 @@ class Tetris:
                 self.set_bag()
             self.current_piece = self.bag.pop(0)
             for i in self.pieces[self.current_piece][self.piece_rotation]:
+                if self.board[self.piece_spawn + i] == self.PASSIVE_PIECE:
+                    raise PermissionError("GAME OVER")
                 self.board[self.piece_spawn + i] = self.ACIVE_PIECE
 
     def add_held(self, held):
@@ -351,7 +385,7 @@ class Tetris:
         if key.char == ("w") or key.keycode == 38:
             #self.board = self.move_up(self.board)
             #self.board = self.move_down(self.board)
-            self.board = self.rotate_piece(self.board)
+            self.board, a = self.rotate_piece(self.board)
             self.draw()
         elif key.char == ("a") or key.keycode == 37:
             self.board = self.move_left(self.board)
@@ -409,7 +443,6 @@ class Tetris:
         return new_list
 
     def draw(self):
-        self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
         self.game_canvas.delete("all")
         for line in range(self.SIDE_LEN//self.TILE_SIZE):
             # iterates creating the vertical lines
@@ -423,7 +456,7 @@ class Tetris:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#FABE57")
             if item == self.PASSIVE_PIECE:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#FA8857")
-            if item == self.WALL_PIECE:
+            if item == self.WALL_PIECE or item == self.BOTTOM_PIECE:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#0F0F0F")
         '''
         for index, item in enumerate(self.pad_board(self.board)):
