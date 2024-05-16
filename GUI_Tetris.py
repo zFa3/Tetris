@@ -15,20 +15,58 @@ class Tetris:
         self.WALL_PIECE = 4
         self.BOTTOM_PIECE = 5
         '''
+        
+        self.SIDE_LEN = 600
+        self.TILE_SIZE = 20
+        self.TILES = self.SIDE_LEN // self.TILE_SIZE
+        self.LINE_WID = 1
+
         self.gameActive = True
 
         # width and height
         self.dimensions = (4, 22)
-        self.U, self.R, self.D, self.L, self.C = (-(self.dimensions[0] + 2), 1, (self.dimensions[0] + 2), -1, 0)
 
         # randomness variable
         self.shuffle_bag = 100
         self.GRAVITY = 1
 
+        self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
+        self.bag_pieces = {
+            # J Piece - Clockwise rotaations
+            1:[
+                [self.C, self.L, self.L + self.U, self.R],
+            ],
+            # L Piece - Clockwise rotations
+            2:[
+                [self.L, self.R, self.R + self.U, self.C],
+            ],
+            # o Piece - No rotations
+            3:[
+                [self.U, self.R, self.R + self.U, self.C]
+            ],
+            # S Piece - Clockwise rotations
+            4:[
+                [self.D, self.L, self.L + self.U, self.C],
+            ],
+            # Z Piece - Clockwise rotations
+            5:[
+                [self.U, self.L, self.L + self.D, self.C],
+            ],
+            # T Piece - Clockwise Rotations
+            6:[
+                [self.L, self.R, self.U, self.C],
+            ],
+            # I piece - Clockwise Rotations
+            7:[
+                [self.L, self.R, self.R + self.R, self.C],
+            ]
+        }
+
         self.piece_rotation = 0  # 0 - 3 index
         self.spawn_coords = [1, 3]
         self.piece_spawn = (self.spawn_coords[0] * (self.dimensions[0] + 2) + self.spawn_coords[1]) - 1
         self.pieceCenter = self.piece_spawn
+        self.U, self.R, self.D, self.L, self.C = (-(self.dimensions[0] + 2), 1, (self.dimensions[0] + 2), -1, 0)
         self.pieces = {
 #           "|### #### ###|"
 #           "|#O# #### ###|"
@@ -94,11 +132,6 @@ class Tetris:
         self.tps = 15
         self.board = []
         self.board = self.set_board()
-
-        self.SIDE_LEN = 600
-        self.TILE_SIZE = 20
-        self.TILES = self.SIDE_LEN // self.TILE_SIZE
-        self.LINE_WID = 1
 
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
@@ -382,35 +415,36 @@ class Tetris:
         self.board = (self.board[:a]) + (self.board[b:])
     
     def keypress(self, key):
-        if key.char == ("w") or key.keycode == 38:
-            #self.board = self.move_up(self.board)
-            #self.board = self.move_down(self.board)
-            self.board, a = self.rotate_piece(self.board)
-            self.draw()
-        elif key.char == ("a") or key.keycode == 37:
-            self.board = self.move_left(self.board)
-            self.draw()
-        elif key.char == ("s") or key.keycode == 32:
-            self.board = self.hard_drop(self.board)
-            self.board = self.solidify()
-            self.add_piece()
-            self.game_tick()
-            self.draw()
-        elif key.char == ("d") or key.keycode == 39:
-            self.board = self.move_right(self.board)
-            self.draw()
-        elif key.char == ("c"):
-            self.board = self.clear_active(self.board)
-            if self.held_piece == "NONE":
-                self.held_piece = self.current_piece
+        try:
+            if key.char == ("w") or key.keycode == 38:
+                #self.board = self.move_up(self.board)
+                #self.board = self.move_down(self.board)
+                self.board, a = self.rotate_piece(self.board)
+                self.draw()
+            elif key.char == ("a") or key.keycode == 37:
+                self.board = self.move_left(self.board)
+                self.draw()
+            elif key.char == ("s") or key.keycode == 32:
+                self.board = self.hard_drop(self.board)
+                self.board = self.solidify()
                 self.add_piece()
-            else:
-                self.add_held(self.held_piece)
-                b = self.current_piece
-                self.current_piece = self.held_piece
-                self.held_piece =  b
-            self.draw()
-
+                self.game_tick()
+                self.draw()
+            elif key.char == ("d") or key.keycode == 39:
+                self.board = self.move_right(self.board)
+                self.draw()
+            elif key.char == ("c"):
+                self.board = self.clear_active(self.board)
+                if self.held_piece == "NONE":
+                    self.held_piece = self.current_piece
+                    self.add_piece()
+                else:
+                    self.add_held(self.held_piece)
+                    b = self.current_piece
+                    self.current_piece = self.held_piece
+                    self.held_piece =  b
+                self.draw()
+        except: pass
     def game_loop(self):
         self.draw()
         tick = 0
@@ -459,13 +493,23 @@ class Tetris:
             if item == self.WALL_PIECE or item == self.BOTTOM_PIECE:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#0F0F0F")
         '''
-        for index, item in enumerate(self.pad_board(self.board)):
-            ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
             self.game_canvas.create_text((ind_row + 0.5) * self.TILE_SIZE, (ind_col + 0.5) * self.TILE_SIZE, text=item, font=("Arial", 15))
         '''
+        self.draw_Pieces()
         self.game_canvas.update()
         self.game_canvas.pack()
 
+    def draw_Pieces(self):
+        if len(self.bag) == 0:
+            self.set_bag()
+
+        for item in self.bag_pieces[self.bag[0]][0]:
+            row_index, col_index = 15, 15
+            row_index += item[0]
+            col_index += item[1]
+
+            self.game_canvas.create_rectangle(row_index * self.TILE_SIZE, col_index * self.TILE_SIZE, (row_index + 1) * self.TILE_SIZE, (col_index + 1) * self.TILE_SIZE, fill=f"orange")
+            #self.game_canvas.create_text((row_index + 0.5) * self.TILE_SIZE, (col_index + 0.5) * self.TILE_SIZE,text=str(item[1]),font=("Arial", 15))
 
 tetr = Tetris()
 #tetr.print_board(tetr.pieces[1])
