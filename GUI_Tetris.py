@@ -101,7 +101,7 @@ class Tetris:
             ],
             # o Piece - No rotations
             3:[
-                [self.U, self.R, self.R + self.U, self.C]
+                [self.U, self.R, self.R + self.U, self.C],
             ],
             # S Piece - Clockwise rotations
             4:[
@@ -171,14 +171,12 @@ class Tetris:
                     self.pieceCenter += self.L
                     self.piece_rotation = a
                     board, ans = self.rotate_piece_once(currentBoard[:])
-                    if ans:
-                        return board, ans
+                    if ans: return board, ans
                     else:
                         self.pieceCenter = uh + self.R
                         self.piece_rotation = a
                         board, ans = self.rotate_piece_once(currentBoard[:])
-                        if ans:
-                            return board, ans
+                        if ans: return board, ans
                         else:
                             #self.pieceCenter = uh, 
                             self.piece_rotation = a; return currentBoard, False
