@@ -3,7 +3,7 @@ import random as rd
 
 class Tetris:
     def __init__(self) -> None:
-        self.ACIVE_PIECE = "#"
+        self.ACIVE_PIECE = "$"
         self.PASSIVE_PIECE = "@"
         self.BACKGROUND_PIECE = " "
         self.WALL_PIECE = "|"
@@ -29,7 +29,14 @@ class Tetris:
         # randomness variable
         self.shuffle_bag = 100
         self.GRAVITY = 1
-
+        self.colors = {
+            0:"#FD3F59",
+            1:"#0341AE",
+            2:"#72CB3B",
+            3:"#FFD500",
+            4:"#FF971C",
+            5:"#FF3213"
+        }
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.bag_pieces = {
@@ -488,11 +495,11 @@ class Tetris:
         for index, item in enumerate(self.pad_board(self.board)):
             ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
             if item == self.ACIVE_PIECE:
-                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#FABE57")
+                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = self.colors[int(self.current_piece % len(self.colors))])
             if item == self.PASSIVE_PIECE:
-                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#FA8857")
+                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "grey")
             if item == self.WALL_PIECE or item == self.BOTTOM_PIECE:
-                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#0F0F0F")
+                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "black")
         '''
             self.game_canvas.create_text((ind_row + 0.5) * self.TILE_SIZE, (ind_col + 0.5) * self.TILE_SIZE, text=item, font=("Arial", 15))
         '''
