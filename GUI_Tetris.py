@@ -180,7 +180,8 @@ class Tetris:
                         if ans:
                             return board, ans
                         else:
-                            self.pieceCenter = uh, self.piece_rotation = a; return currentBoard, False
+                            #self.pieceCenter = uh, 
+                            self.piece_rotation = a; return currentBoard, False
             currentBoard = self.clear_active(currentBoard)
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
