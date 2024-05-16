@@ -34,8 +34,10 @@ class Tetris:
             1:"#0341AE",
             2:"#72CB3B",
             3:"#FFD500",
-            4:"#FF971C",
-            5:"#FF3213"
+            4:"#39892F",
+            5:"#FF3213",
+            6:"#78256F",
+            7:"#01EDFA"
         }
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
@@ -144,7 +146,7 @@ class Tetris:
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
         self.game_canvas = tk.Canvas(self.root)
-        self.game_canvas.config(background="#C0FFEE")
+        self.game_canvas.config(background="#ECECEC")
         self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
 
         self.root.bind("<Up>", self.keypress)
@@ -167,11 +169,13 @@ class Tetris:
                 if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
                     uh = self.pieceCenter
                     self.pieceCenter += self.L
+                    self.piece_rotation = a
                     board, ans = self.rotate_piece_once(currentBoard[:])
                     if ans:
                         return board, ans
                     else:
                         self.pieceCenter = uh + self.R
+                        self.piece_rotation = a
                         board, ans = self.rotate_piece_once(currentBoard[:])
                         if ans:
                             return board, ans
@@ -506,20 +510,19 @@ class Tetris:
         for i in range(5):
             if len(self.bag) < 5:
                 self.set_bag()
-            self.draw_Pieces((25, (i * 5 + 3)), self.bag[i])
+            self.draw_Pieces((25, (i * 5 + 3)), self.bag[i], "red")
         try:
-            self.draw_Pieces((15, 3), self.held_piece)
+            self.draw_Pieces((15, 3), self.held_piece, self.colors[int(self.held_piece) % len(self.colors)])
         except: pass
         self.game_canvas.update()
         self.game_canvas.pack()
 
-    def draw_Pieces(self, starting, piece):
+    def draw_Pieces(self, starting, piece, color):
         for item in self.bag_pieces[piece][0]:
             row_index, col_index = starting[0], starting[1]
             row_index += item[0]
             col_index += item[1]
-
-            self.game_canvas.create_rectangle(row_index * self.TILE_SIZE, col_index * self.TILE_SIZE, (row_index + 1) * self.TILE_SIZE, (col_index + 1) * self.TILE_SIZE, fill=f"orange")
+            self.game_canvas.create_rectangle(row_index * self.TILE_SIZE, col_index * self.TILE_SIZE, (row_index + 1) * self.TILE_SIZE, (col_index + 1) * self.TILE_SIZE, fill = color)
             #self.game_canvas.create_text((row_index + 0.5) * self.TILE_SIZE, (col_index + 0.5) * self.TILE_SIZE,text=str(item[1]),font=("Arial", 15))
 
 tetr = Tetris()
