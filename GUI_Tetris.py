@@ -31,26 +31,27 @@ class Tetris:
         self.GRAVITY = 1
 
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
+        self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.bag_pieces = {
             # J Piece - Clockwise rotaations
             1:[
-                [self.C, self.L, self.L + self.U, self.R],
+                [self.C, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.R],
             ],
             # L Piece - Clockwise rotations
             2:[
-                [self.L, self.R, self.R + self.U, self.C],
+                [self.L, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C],
             ],
             # o Piece - No rotations
             3:[
-                [self.U, self.R, self.R + self.U, self.C]
+                [self.U, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C]
             ],
             # S Piece - Clockwise rotations
             4:[
-                [self.D, self.L, self.L + self.U, self.C],
+                [self.D, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.C],
             ],
             # Z Piece - Clockwise rotations
             5:[
-                [self.U, self.L, self.L + self.D, self.C],
+                [self.U, self.L, (self.L[0] + self.D[0], self.L[1] + self.D[1]) , self.C],
             ],
             # T Piece - Clockwise Rotations
             6:[
@@ -58,7 +59,7 @@ class Tetris:
             ],
             # I piece - Clockwise Rotations
             7:[
-                [self.L, self.R, self.R + self.R, self.C],
+                [self.L, self.R, (self.R[0] + self.R[0], self.R[1] + self.R[1]) , self.C],
             ]
         }
 
@@ -495,16 +496,19 @@ class Tetris:
         '''
             self.game_canvas.create_text((ind_row + 0.5) * self.TILE_SIZE, (ind_col + 0.5) * self.TILE_SIZE, text=item, font=("Arial", 15))
         '''
-        self.draw_Pieces()
+        for i in range(5):
+            if len(self.bag) < 5:
+                self.set_bag()
+            self.draw_Pieces((25, (i * 5 + 3)), self.bag[i])
+        try:
+            self.draw_Pieces((15, 3), self.held_piece)
+        except: pass
         self.game_canvas.update()
         self.game_canvas.pack()
 
-    def draw_Pieces(self):
-        if len(self.bag) == 0:
-            self.set_bag()
-
-        for item in self.bag_pieces[self.bag[0]][0]:
-            row_index, col_index = 15, 15
+    def draw_Pieces(self, starting, piece):
+        for item in self.bag_pieces[piece][0]:
+            row_index, col_index = starting[0], starting[1]
             row_index += item[0]
             col_index += item[1]
 
