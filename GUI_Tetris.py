@@ -41,17 +41,17 @@ class Tetris:
             7:"#01EDFA"
         }
         self.colors = {
-                0: "#FF5733",
-                1: "#FFC300",
-                2: "#FF33A1",
-                3: "#33FF57",
-                4: "#33A1FF",
-                5: "#FF5733",
-                6: "#FF33A1",
-                7: "#33FF57",
-                8: "#33A1FF",
-                9: "#FFC300" 
-            }
+            0: "#FF5733",
+            1: "#FFC300",
+            2: "#FF33A1",
+            3: "#33FF57",
+            4: "#33A1FF",
+            5: "#FF5733",
+            6: "#FF33A1",
+            7: "#33FF57",
+            8: "#33A1FF",
+            9: "#FFC300" 
+        }
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.bag_pieces = {
@@ -87,7 +87,9 @@ class Tetris:
 
         self.piece_rotation = 0  # 0 - 3 index
         self.spawn_coords = [1, 3]
-        self.moved = False
+        self.held = False
+        self.moved = 0
+        self.keypressed = False
         self.piece_spawn = (self.spawn_coords[0] * (self.dimensions[0] + 2) + self.spawn_coords[1]) - 1
         self.pieceCenter = self.piece_spawn
         self.U, self.R, self.D, self.L, self.C = (-(self.dimensions[0] + 2), 1, (self.dimensions[0] + 2), -1, 0)
@@ -410,7 +412,7 @@ class Tetris:
             print()
     
     def solidify(self):
-        self.moved = False
+        self.held = False
         n = []
         for i in self.board:
             if i == self.ACIVE_PIECE:
@@ -424,6 +426,8 @@ class Tetris:
         
         # check if there are any filled lines
         self.find_filled()
+        if self.board == self.set_board() and self.keypressed:
+            self.moved = 50
             # clear the filled lines
         # check if you lost the game
             # close the program
@@ -436,7 +440,7 @@ class Tetris:
         for i in range(self.dimensions[1]):
             if all(lines[i * (self.dimensions[0] + 2) + 1:(i + 1) * (self.dimensions[0] + 2) - 1]):
                 self.remove_filled(i + 1)
-    
+
     def remove_filled(self, row_index: int) -> None:
         self.board.insert(0, self.WALL_PIECE)
         for _ in range(self.dimensions[0]):
@@ -446,6 +450,7 @@ class Tetris:
         self.board = (self.board[:a]) + (self.board[b:])
     
     def keypress(self, key):
+        self.keypressed = True
         try:
             if key.char == ("w") or key.keycode == 38 or key.char == "x":
                 #self.board = self.move_up(self.board)
@@ -462,14 +467,18 @@ class Tetris:
             elif key.char == ("s") or key.keycode == 32:
                 self.board = self.hard_drop(self.board)
                 self.board = self.solidify()
+                self.find_filled()
+                if self.board == self.set_board() and self.keypressed:
+                    self.moved = 50
+                #self.print_board(self.board)
                 self.add_piece()
                 self.game_tick()
                 self.draw()
             elif key.char == ("d") or key.keycode == 39:
                 self.board = self.move_right(self.board)
                 self.draw()
-            elif key.char == ("c") and not self.moved:
-                self.moved = True
+            elif key.char == ("c") and not self.held:
+                self.held = True
                 self.board = self.clear_active(self.board)
                 if self.held_piece == "NONE":
                     self.held_piece = self.current_piece
@@ -515,6 +524,11 @@ class Tetris:
 
     def draw(self):
         self.game_canvas.delete("all")
+        if self.moved > 1:
+            self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text="ALL CLEAR", font=("Arial", int(abs(self.moved * 1.3 - 30))), angle=(self.moved * 3.6)%360)
+            self.moved -= 2
+        else:
+            self.moved = 0
         for index, item in enumerate(self.pad_board(self.highlight_piece())):
             ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
             if item == self.ACIVE_PIECE:
