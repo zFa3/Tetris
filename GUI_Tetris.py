@@ -19,17 +19,17 @@ class Tetris:
         self.SIDE_LEN = 600
         self.TILE_SIZE = 20
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
-        self.LINE_WID = 1
+        self.LINE_WID = 0.5
+        self.draw_lines = True
 
         self.gameActive = True
 
         # width and height
-        self.dimensions = (10, 22)
+        self.dimensions = (4, 22)
 
         # randomness variable
         self.shuffle_bag = 50
-        self.draw_lines = False
-        self.GRAVITY = 1
+        self.GRAVITY = 5
         self.colors = {
             0:"#FD3F59",
             1:"#0341AE",
@@ -87,6 +87,7 @@ class Tetris:
 
         self.piece_rotation = 0  # 0 - 3 index
         self.spawn_coords = [1, 3]
+        self.moved = False
         self.piece_spawn = (self.spawn_coords[0] * (self.dimensions[0] + 2) + self.spawn_coords[1]) - 1
         self.pieceCenter = self.piece_spawn
         self.U, self.R, self.D, self.L, self.C = (-(self.dimensions[0] + 2), 1, (self.dimensions[0] + 2), -1, 0)
@@ -161,6 +162,7 @@ class Tetris:
         self.game_canvas = tk.Canvas(self.root)
         self.game_canvas.config(background="#ECECEC")
         self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
+        self.root.title("Tetris")
 
         self.root.bind("<Up>", self.keypress)
         self.root.bind("x", self.keypress)
@@ -169,6 +171,10 @@ class Tetris:
         self.root.bind("<Right>", self.keypress)
         self.root.bind("<space>", self.keypress)
         self.root.bind("c", self.keypress)
+        self.root.bind("q", self.destroy)
+
+    def destroy(self, *args):
+        self.root.destroy()
 
     def clear_active(self, currentBoard):
         for i, t in enumerate(currentBoard):
@@ -210,13 +216,14 @@ class Tetris:
         return currentBoard, True
 
     def set_bag(self):
-        self.bag = [i + 1 for i in range(len(self.pieces))]
+        bag = [i + 1 for i in range(len(self.pieces))]
         #self.bag = [6 for i in range(len(self.pieces))]
         for _ in range(self.shuffle_bag):
             a, b = rd.randint(0, len(self.pieces) - 1), rd.randint(0, len(self.pieces) - 1)
-            a1 = self.bag[a]
-            self.bag[a] = self.bag[b]
-            self.bag[b] = a1
+            a1 = bag[a]
+            bag[a] = bag[b]
+            bag[b] = a1
+        self.bag += bag
 
     def set_board(self):
         board = []
@@ -330,7 +337,6 @@ class Tetris:
                     board[i] = self.BACKGROUND_PIECE
                     board[next_index] = self.ACIVE_PIECE
             #self.draw(board)
-        self.add_piece()
         return board
     
     def soft_drop(self, originalBoard) -> str:
@@ -404,6 +410,7 @@ class Tetris:
             print()
     
     def solidify(self):
+        self.moved = False
         n = []
         for i in self.board:
             if i == self.ACIVE_PIECE:
@@ -461,7 +468,8 @@ class Tetris:
             elif key.char == ("d") or key.keycode == 39:
                 self.board = self.move_right(self.board)
                 self.draw()
-            elif key.char == ("c"):
+            elif key.char == ("c") and not self.moved:
+                self.moved = True
                 self.board = self.clear_active(self.board)
                 if self.held_piece == "NONE":
                     self.held_piece = self.current_piece
@@ -472,6 +480,7 @@ class Tetris:
                     self.current_piece = self.held_piece
                     self.held_piece =  b
                 self.draw()
+                return
         except: pass
     def game_loop(self):
         self.draw()
@@ -506,6 +515,10 @@ class Tetris:
 
     def draw(self):
         self.game_canvas.delete("all")
+        for index, item in enumerate(self.pad_board(self.highlight_piece())):
+            ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
+            if item == self.ACIVE_PIECE:
+                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#AFAFAF", outline="white")
         if self.draw_lines:
             for line in range(self.SIDE_LEN//self.TILE_SIZE):
                 # iterates creating the vertical lines
@@ -528,8 +541,7 @@ class Tetris:
             if len(self.bag) < 5:
                 self.set_bag()
             self.draw_Pieces((25, (i * 5 + 3)), self.bag[i], self.colors[int(self.bag[i]) % len(self.colors)])
-        try:
-            self.draw_Pieces((15, 3), self.held_piece, self.colors[int(self.held_piece) % len(self.colors)])
+        try: self.draw_Pieces((15, 3), self.held_piece, self.colors[int(self.held_piece) % len(self.colors)])
         except: pass
         self.game_canvas.update()
         self.game_canvas.pack()
@@ -541,6 +553,11 @@ class Tetris:
             col_index += item[1]
             self.game_canvas.create_rectangle(row_index * self.TILE_SIZE, col_index * self.TILE_SIZE, (row_index + 1) * self.TILE_SIZE, (col_index + 1) * self.TILE_SIZE, fill = color)
             #self.game_canvas.create_text((row_index + 0.5) * self.TILE_SIZE, (col_index + 0.5) * self.TILE_SIZE,text=str(item[1]),font=("Arial", 15))
+
+    def highlight_piece(self):
+        board = self.hard_drop(self.board)
+        return board
+
 
 tetr = Tetris()
 #tetr.print_board(tetr.pieces[1])
