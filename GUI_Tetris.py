@@ -15,31 +15,21 @@ class Tetris:
         self.WALL_PIECE = 4
         self.BOTTOM_PIECE = 5
         '''
-        
+        self.lines = 0
         self.SIDE_LEN = 600
         self.TILE_SIZE = 20
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
-        self.LINE_WID = 0.5
+        self.LINE_WID = 1
         self.draw_lines = False
 
         self.gameActive = True
 
         # width and height
-        self.dimensions = (10, 22)
+        self.dimensions = (4, 22)
 
         # randomness variable
         self.shuffle_bag = 50
         self.GRAVITY = 8
-        self.colors = {
-            0:"#FD3F59",
-            1:"#0341AE",
-            2:"#72CB3B",
-            3:"#0FD500",
-            4:"#39892F",
-            5:"#FF3213",
-            6:"#78256F",
-            7:"#01EDFA"
-        }
         self.colors = {
             0: "#FF5733",
             1: "#FFC300",
@@ -50,7 +40,15 @@ class Tetris:
             6: "#FF33A1",
             7: "#33FF57",
             8: "#33A1FF",
-            9: "#FFC300" 
+            9: "#FFC300",
+            10:"#FD3F59",
+            11:"#0341AE",
+            12:"#72CB3B",
+            13:"#0FD500",
+            14:"#39892F",
+            15:"#FF3213",
+            16:"#78256F",
+            17:"#01EDFA"
         }
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
@@ -121,17 +119,17 @@ class Tetris:
             ],
             # S Piece - Clockwise rotations
             4:[
-                [self.D, self.L, self.L + self.U, self.C],
                 [self.L, self.U, self.U + self.R, self.C],
                 [self.U, self.R, self.R + self.D, self.C],
-                [self.R, self.D, self.D + self.L, self.C]
+                [self.R, self.D, self.D + self.L, self.C],
+                [self.D, self.L, self.L + self.U, self.C]
             ],
             # Z Piece - Clockwise rotations
             5:[
-                [self.U, self.L, self.L + self.D, self.C],
                 [self.R, self.U, self.U + self.L, self.C],
                 [self.D, self.R, self.R + self.U, self.C],
-                [self.L, self.D, self.D + self.R, self.C]
+                [self.L, self.D, self.D + self.R, self.C],
+                [self.U, self.L, self.L + self.D, self.C]
             ],
             # T Piece - Clockwise Rotations
             6:[
@@ -156,6 +154,7 @@ class Tetris:
         # frames per second
         self.fps = 1
         self.tps = 15
+        self.counter = 1
         self.board = self.set_board()
         '''
         self.board = list(
@@ -177,14 +176,15 @@ class Tetris:
             "|          |"
             "|          |"
             "|          |"
-            "|@      @@@|"
-            "|@@@@@   @@|"
-            "|@@@@@@ @@@|"
-            "|@@@@   @@@|"
+            "|          |"
+            "|          |"
+            "|@@@  @@@@@|"
+            "|@@@@  @@@@|"
             "_____________"
 #            "|$$$$$  $$$|"
 #            "|$$$$  $$$$|"
-        )'''
+        )
+        '''
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
         self.game_canvas = tk.Canvas(self.root)
@@ -192,6 +192,7 @@ class Tetris:
         self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
         self.root.title("Tetris")
 
+        self.root.bind("r", self.reset)
         self.root.bind("x", self.keypress)
         self.root.bind("z", self.keypress)
         self.root.bind("<Up>", self.keypress)
@@ -200,10 +201,14 @@ class Tetris:
         self.root.bind("<Down>", self.keypress)
         self.root.bind("<space>", self.keypress)
         self.root.bind("c", self.keypress)
-        self.root.bind("q", self.destroy)
+        self.root.bind("<Escape>", self.destroy)
 
     def destroy(self, *args):
         self.root.destroy()
+    
+    def reset(self, *args):
+        self.board = self.set_board()
+        self.add_piece()
 
     def clear_active(self, currentBoard):
         for i, t in enumerate(currentBoard):
@@ -294,7 +299,7 @@ class Tetris:
             self.current_piece = self.bag.pop(0)
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 if self.board[self.piece_spawn + i] == self.PASSIVE_PIECE:
-                    raise PermissionError("GAME OVER")
+                    print("Score: ", self.lines); raise PermissionError("GAME OVER")
                 self.board[self.piece_spawn + i] = self.ACIVE_PIECE
 
     def add_held(self, held):
@@ -449,7 +454,7 @@ class Tetris:
         # check if there are any filled lines
         self.find_filled()
         if self.board == self.set_board() and self.keypressed:
-            self.moved = 50
+            self.moved = 50; self.lines += 3
             # clear the filled lines
         # check if you lost the game
             # close the program
@@ -464,6 +469,7 @@ class Tetris:
                 self.remove_filled(i + 1)
 
     def remove_filled(self, row_index: int) -> None:
+        self.lines += 1
         self.board.insert(0, self.WALL_PIECE)
         for _ in range(self.dimensions[0]):
             self.board.insert(0, self.BACKGROUND_PIECE)
@@ -472,13 +478,18 @@ class Tetris:
         self.board = (self.board[:a]) + (self.board[b:])
     
     def keypress(self, key):
+        #print(key.char)
         self.keypressed = True
         try:
-            if key.char == ("w") or key.keycode == 38 or key.char == "x":
+            if key.char == ("w") or key.keycode == 38:
                 #self.board = self.move_up(self.board)
                 #self.board = self.move_down(self.board)
                 self.board, a = self.rotate_piece(self.board, 1)
                 self.draw()
+            elif key.char == "x":
+                self.board, a = self.rotate_piece(self.board, 2)
+                self.draw()
+
             if key.char == "z":
                 self.board, a = self.rotate_piece(self.board, -1)
                 self.draw()
@@ -490,7 +501,7 @@ class Tetris:
                 self.board = self.solidify()
                 self.find_filled()
                 if self.board == self.set_board() and self.keypressed:
-                    self.moved = 50
+                    self.moved = 50; self.lines += 3
                 #self.print_board(self.board)
                 self.add_piece()
                 self.game_tick()
@@ -515,24 +526,29 @@ class Tetris:
                 self.draw()
                 return
         except: pass
+
     def game_loop(self):
         self.add_piece()
         self.draw()
         tick = 0
         while self.gameActive:
             self.game_tick()
+            #tm.sleep(1/self.fps)
+            self.add_piece()
+                # check if you can move the element down
+                    # move down
+                # if it cant then we change it to "garbage"
             if tick > self.GRAVITY:
-                tick = 0
-                #tm.sleep(1/self.fps)
-                self.add_piece()
                 a, cnMove = self.move_down(self.board)
                 if not cnMove:
-                    self.board = self.solidify()
-                    # check if you can move the element down
-                        # move down
-                    # if it cant then we change it to "garbage"
+                    if self.counter > 15:
+                        self.counter = 0
+                        self.board = self.solidify()
+                    else:
+                        self.counter += 1
                 else:
                     self.board = a
+                    tick = 0
             tick += 1
             self.game_canvas.after(10)
             self.draw()
@@ -549,6 +565,7 @@ class Tetris:
 
     def draw(self):
         self.game_canvas.delete("all")
+        self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text = self.lines, font=("Courier new", 150, "bold"), fill="#E5E5E5")
         if self.moved > 1:
             self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text="ALL CLEAR", font=("Arial", int(abs(self.moved * 1.3 - 30))), angle=(self.moved * 3.6)%360)
             self.moved -= 2
@@ -557,7 +574,7 @@ class Tetris:
         for index, item in enumerate(self.pad_board(self.highlight_piece())):
             ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
             if item == self.ACIVE_PIECE:
-                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#AFAFAF", outline="white")
+                self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#8EE6DB", outline="white")
         if self.draw_lines:
             for line in range(self.SIDE_LEN//self.TILE_SIZE):
                 # iterates creating the vertical lines
