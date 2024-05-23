@@ -16,8 +16,8 @@ class Tetris:
         self.BOTTOM_PIECE = 5
         '''
         self.lines = 0
-        self.SIDE_LEN = 600
-        self.TILE_SIZE = 20
+        self.SIDE_LEN = 800
+        self.TILE_SIZE = 30
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
         self.LINE_WID = 1
         self.draw_lines = False
@@ -209,6 +209,7 @@ class Tetris:
     def reset(self, *args):
         self.board = self.set_board()
         self.add_piece()
+        self.lines = 0
 
     def clear_active(self, currentBoard):
         for i, t in enumerate(currentBoard):
@@ -563,11 +564,16 @@ class Tetris:
                 new_list.append(" ")
         return new_list
 
+    def format(self, hex):
+        if len(hex) != 2:
+            hex = "0" + hex
+        return hex
+
     def draw(self):
         self.game_canvas.delete("all")
         self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text = self.lines, font=("Courier new", 150, "bold"), fill="#E5E5E5")
         if self.moved > 1:
-            self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text="ALL CLEAR", font=("Arial", int(abs(self.moved * 1.3 - 30))), angle=(self.moved * 3.6)%360)
+            self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text="ALL CLEAR", font=("Arial", int(abs(self.moved * 1.3 - 30))), angle=(self.moved * 3.6)%360, fill=f"#{self.format(hex((self.moved * 3)%255)[2:])}{self.format(hex((self.moved * 5)%255)[2:])}{self.format(hex((self.moved * 175)%255)[2:])}")
             self.moved -= 2
         else:
             self.moved = 0
@@ -614,8 +620,5 @@ class Tetris:
         board = self.hard_drop(self.board)
         return board
 
-
 tetr = Tetris()
-#tetr.print_board(tetr.pieces[1])
-#tetr.print_board(tetr.rotate_piece(tetr.pieces[1]))
 tetr.game_loop()
