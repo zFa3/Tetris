@@ -16,8 +16,8 @@ class Tetris:
         self.BOTTOM_PIECE = 5
         '''
         self.lines = 0
-        self.SIDE_LEN = 800
-        self.TILE_SIZE = 30
+        self.SIDE_LEN = 600
+        self.TILE_SIZE = 20
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
         self.LINE_WID = 1
         self.draw_lines = False
