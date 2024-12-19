@@ -16,8 +16,10 @@ class Tetris:
         self.BOTTOM_PIECE = 5
         '''
         self.lines = 0
-        self.SIDE_LEN = 600
-        self.TILE_SIZE = 20
+        self.SIDE_LEN = 500
+        self.TILE_SIZE = 15
+        self.SIDE_LEN = 1500
+        self.TILE_SIZE = 35
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
         self.LINE_WID = 1
         self.draw_lines = False
@@ -25,7 +27,9 @@ class Tetris:
         self.gameActive = True
 
         # width and height
-        self.dimensions = (4, 22)
+        self.dimensions = (10, 22)
+
+        self.insta_soft_drop = True
 
         # randomness variable
         self.shuffle_bag = 50
@@ -156,6 +160,7 @@ class Tetris:
         self.tps = 15
         self.counter = 1
         self.board = self.set_board()
+
         '''
         self.board = list(
             "|          |"
@@ -181,10 +186,9 @@ class Tetris:
             "|@@@  @@@@@|"
             "|@@@@  @@@@|"
             "_____________"
-#            "|$$$$$  $$$|"
-#            "|$$$$  $$$$|"
         )
         '''
+
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
         self.game_canvas = tk.Canvas(self.root)
@@ -217,42 +221,59 @@ class Tetris:
                 currentBoard[i] = self.BACKGROUND_PIECE
         return currentBoard
 
-    def rotate_piece(self, currentBoard, asda):
+    '''def rotate_piece(self, currentBoard, rotations):
         if "".join(currentBoard).count(self.ACIVE_PIECE):
             a = self.piece_rotation
-            self.piece_rotation = (self.piece_rotation + asda) % len(self.pieces[self.current_piece])
+            self.piece_rotation = (self.piece_rotation + rotations) % len(self.pieces[self.current_piece])
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
-                    uh = self.pieceCenter
+                    center = self.pieceCenter
                     self.pieceCenter += self.L
                     self.piece_rotation = a
                     board, ans = self.rotate_piece_once(currentBoard[:])
+                    return board, ans
                     if ans: return board, ans
                     else:
-                        uh = self.pieceCenter
+                        center = self.pieceCenter
                         self.pieceCenter +=  self.D + self.R
                         self.piece_rotation = a
                         board, ans = self.rotate_piece_once(currentBoard[:])
                         if ans: return board, ans
                         else:
-                            uh = self.pieceCenter
+                            center = self.pieceCenter
                             self.pieceCenter +=  self.D + self.L
                             self.piece_rotation = a
                             board, ans = self.rotate_piece_once(currentBoard[:])
                             if ans: return board, ans
                             else:        
-                                self.pieceCenter = uh + self.R
+                                self.pieceCenter = center + self.R
                                 self.piece_rotation = a
                                 board, ans = self.rotate_piece_once(currentBoard[:])
                                 if ans: return board, ans
                                 else:
-                                    uh = self.pieceCenter
+                                    center = self.pieceCenter
                                     self.pieceCenter +=  self.D
                                     self.piece_rotation = a
                                     board, ans = self.rotate_piece_once(currentBoard[:])
                                     if ans: return board, ans
                                     else:
                                         self.piece_rotation = a; return currentBoard, False
+            currentBoard = self.clear_active(currentBoard)
+            for i in self.pieces[self.current_piece][self.piece_rotation]:
+                currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
+            return currentBoard, True'''
+    
+    def rotate_piece(self, currentBoard, rotations):
+        if "".join(currentBoard).count(self.ACIVE_PIECE):
+            a = self.piece_rotation
+            self.piece_rotation = (self.piece_rotation + rotations) % len(self.pieces[self.current_piece])
+            for i in self.pieces[self.current_piece][self.piece_rotation]:
+                if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
+                    center = self.pieceCenter
+                    # self.pieceCenter += self.L
+                    self.piece_rotation = a
+                    board, ans = self.rotate_piece_once(currentBoard[:])
+                    return board, ans
             currentBoard = self.clear_active(currentBoard)
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
@@ -349,26 +370,50 @@ class Tetris:
             self.pieceCenter += self.R
         return board
 
-    def move_down(self, originalBoard):
-        board = originalBoard[:]
-        indexes = []
-        for i, t in enumerate(board):
-            if t == self.ACIVE_PIECE:
-                indexes.append(i)
-        indexes = sorted(indexes, reverse=True)
-        canMove = True
-        for i in indexes:
-            next_index = i + self.D
-            if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
-                canMove = False
-                #print(board[next_index], next_index, i, board[i])
-        if canMove:
+    def move_down(self, originalBoard, insta_soft_drop):
+        if not insta_soft_drop:
+            board = originalBoard[:]
+            indexes = []
+            for i, t in enumerate(board):
+                if t == self.ACIVE_PIECE:
+                    indexes.append(i)
+            indexes = sorted(indexes, reverse=True)
+            canMove = True
             for i in indexes:
                 next_index = i + self.D
-                board[i] = self.BACKGROUND_PIECE
-                board[next_index] = self.ACIVE_PIECE
-            self.pieceCenter += self.D
-        return board, canMove
+                if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
+                    canMove = False
+                    #print(board[next_index], next_index, i, board[i])
+            if canMove:
+                for i in indexes:
+                    next_index = i + self.D
+                    board[i] = self.BACKGROUND_PIECE
+                    board[next_index] = self.ACIVE_PIECE
+                self.pieceCenter += self.D
+            return board, canMove
+        else:
+            board = originalBoard[:]
+            canMove = True
+            while canMove:
+                self.pieceCenter += self.D
+                indexes = []
+                for i, t in enumerate(board):
+                    if t == self.ACIVE_PIECE:
+                        indexes.append(i)
+                indexes = sorted(indexes, reverse=True)
+                if not indexes:
+                    break
+                for i in indexes:
+                    next_index = i + self.D
+                    if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
+                        canMove = False
+                if canMove:
+                    for i in indexes:
+                        next_index = i + self.D
+                        board[i] = self.BACKGROUND_PIECE
+                        board[next_index] = self.ACIVE_PIECE
+            self.pieceCenter -= self.D
+            return board, canMove
     
     def hard_drop(self, originalBoard) -> str:
         board = originalBoard[:]
@@ -508,7 +553,7 @@ class Tetris:
                 self.game_tick()
                 self.draw()
             elif key.keycode == 2097215233:
-                self.board, a = self.move_down(self.board)
+                self.board, a = self.move_down(self.board, self.insta_soft_drop)
                 self.draw()
             elif key.keycode == 2080438019:
                 self.board = self.move_right(self.board)
@@ -540,7 +585,7 @@ class Tetris:
                     # move down
                 # if it cant then we change it to "garbage"
             if tick > self.GRAVITY:
-                a, cnMove = self.move_down(self.board)
+                a, cnMove = self.move_down(self.board, False)
                 if not cnMove:
                     if self.counter > 15:
                         self.counter = 0
