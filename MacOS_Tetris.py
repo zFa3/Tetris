@@ -8,16 +8,9 @@ class Tetris:
         self.BACKGROUND_PIECE = " "
         self.WALL_PIECE = "|"
         self.BOTTOM_PIECE = "_"
-        '''
-        self.ACIVE_PIECE = 1
-        self.PASSIVE_PIECE = 2
-        self.BACKGROUND_PIECE = 3
-        self.WALL_PIECE = 4
-        self.BOTTOM_PIECE = 5
-        '''
+
         self.lines = 0
         self.SIDE_LEN = 500
-        self.TILE_SIZE = 15
         self.SIDE_LEN = 1500
         self.TILE_SIZE = 35
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
@@ -56,8 +49,9 @@ class Tetris:
         }
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
+
         self.bag_pieces = {
-            # J Piece - Clockwise rotaations
+            # J Piece - Clockwise rotations
             1:[
                 [self.C, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.R],
             ],
@@ -129,11 +123,17 @@ class Tetris:
                 [self.D, self.L, self.L + self.U, self.C]
             ],
             # Z Piece - Clockwise rotations
+            # 5:[
+            #     [self.R, self.U, self.U + self.L, self.C],
+            #     [self.D, self.R, self.R + self.U, self.C],
+            #     [self.L, self.D, self.D + self.R, self.C],
+            #     [self.U, self.L, self.L + self.D, self.C]
+            # ],
             5:[
+                [self.U, self.L, self.D + self.L, self.C],
                 [self.R, self.U, self.U + self.L, self.C],
-                [self.D, self.R, self.R + self.U, self.C],
+                [self.D, self.R, self.U + self.R, self.C],
                 [self.L, self.D, self.D + self.R, self.C],
-                [self.U, self.L, self.L + self.D, self.C]
             ],
             # T Piece - Clockwise Rotations
             6:[
@@ -150,7 +150,8 @@ class Tetris:
                 [self.R, self.R + self.U, self.R + self.D, self.R + self.D + self.D]
             ]
         }
-        self.bag = []; self.set_bag()
+        self.bag = []
+        self.set_bag()
         self.current_piece = self.bag.pop(0)
         self.held_piece = "NONE"
 
@@ -160,34 +161,6 @@ class Tetris:
         self.tps = 15
         self.counter = 1
         self.board = self.set_board()
-
-        '''
-        self.board = list(
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|          |"
-            "|@@@  @@@@@|"
-            "|@@@@  @@@@|"
-            "_____________"
-        )
-        '''
 
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
@@ -214,6 +187,8 @@ class Tetris:
         self.board = self.set_board()
         self.add_piece()
         self.lines = 0
+        self.bag = []
+        self.set_bag()
 
     def clear_active(self, currentBoard):
         for i, t in enumerate(currentBoard):
@@ -221,59 +196,46 @@ class Tetris:
                 currentBoard[i] = self.BACKGROUND_PIECE
         return currentBoard
 
-    '''def rotate_piece(self, currentBoard, rotations):
+    def rotate_piece(self, currentBoard, rotations):
         if "".join(currentBoard).count(self.ACIVE_PIECE):
-            a = self.piece_rotation
+            oldRotation = self.piece_rotation
+            oldCenter = self.pieceCenter
             self.piece_rotation = (self.piece_rotation + rotations) % len(self.pieces[self.current_piece])
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
-                    center = self.pieceCenter
                     self.pieceCenter += self.L
-                    self.piece_rotation = a
+                    self.piece_rotation = oldRotation
                     board, ans = self.rotate_piece_once(currentBoard[:])
-                    return board, ans
                     if ans: return board, ans
                     else:
-                        center = self.pieceCenter
-                        self.pieceCenter +=  self.D + self.R
-                        self.piece_rotation = a
+                        self.pieceCenter = oldCenter
+                        self.pieceCenter += self.D + self.R
+                        self.piece_rotation = oldRotation
                         board, ans = self.rotate_piece_once(currentBoard[:])
                         if ans: return board, ans
                         else:
-                            center = self.pieceCenter
+                            self.pieceCenter = oldCenter
                             self.pieceCenter +=  self.D + self.L
-                            self.piece_rotation = a
+                            self.piece_rotation = oldRotation
                             board, ans = self.rotate_piece_once(currentBoard[:])
                             if ans: return board, ans
-                            else:        
-                                self.pieceCenter = center + self.R
-                                self.piece_rotation = a
+                            else:
+                                self.pieceCenter = oldCenter      
+                                self.pieceCenter += self.R
+                                self.piece_rotation = oldRotation
                                 board, ans = self.rotate_piece_once(currentBoard[:])
                                 if ans: return board, ans
                                 else:
-                                    center = self.pieceCenter
-                                    self.pieceCenter +=  self.D
-                                    self.piece_rotation = a
+                                    self.pieceCenter = oldCenter
+                                    self.pieceCenter +=  self.U
+                                    self.piece_rotation = oldRotation
                                     board, ans = self.rotate_piece_once(currentBoard[:])
                                     if ans: return board, ans
                                     else:
-                                        self.piece_rotation = a; return currentBoard, False
-            currentBoard = self.clear_active(currentBoard)
-            for i in self.pieces[self.current_piece][self.piece_rotation]:
-                currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
-            return currentBoard, True'''
-    
-    def rotate_piece(self, currentBoard, rotations):
-        if "".join(currentBoard).count(self.ACIVE_PIECE):
-            a = self.piece_rotation
-            self.piece_rotation = (self.piece_rotation + rotations) % len(self.pieces[self.current_piece])
-            for i in self.pieces[self.current_piece][self.piece_rotation]:
-                if currentBoard[self.pieceCenter + i] != self.BACKGROUND_PIECE and currentBoard[self.pieceCenter + i] != self.ACIVE_PIECE:
-                    center = self.pieceCenter
-                    # self.pieceCenter += self.L
-                    self.piece_rotation = a
-                    board, ans = self.rotate_piece_once(currentBoard[:])
-                    return board, ans
+                                        self.piece_rotation = oldRotation
+                                        self.pieceCenter = oldCenter
+                                        return currentBoard, False
+            # normal rotation
             currentBoard = self.clear_active(currentBoard)
             for i in self.pieces[self.current_piece][self.piece_rotation]:
                 currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
@@ -289,17 +251,15 @@ class Tetris:
         for i in self.pieces[self.current_piece][self.piece_rotation]:
             currentBoard[self.pieceCenter + i] = self.ACIVE_PIECE
         return currentBoard, True
-
+    
     def set_bag(self):
-        bag = [i + 1 for i in range(len(self.pieces))]
-        #self.bag = [6 for i in range(len(self.pieces))]
-        for _ in range(self.shuffle_bag):
-            a, b = rd.randint(0, len(self.pieces) - 1), rd.randint(0, len(self.pieces) - 1)
-            a1 = bag[a]
-            bag[a] = bag[b]
-            bag[b] = a1
-        self.bag += bag
-        #print(self.bag)
+        newBag = list(set([i + 1 for i in range(len(self.pieces))]).difference(set(self.bag)))
+        fullBag = self.bag[:]
+        rd.shuffle(newBag)
+        rd.shuffle(fullBag)
+        self.bag += newBag
+        self.bag += fullBag
+        print(self.bag)
 
     def set_board(self):
         board = []
