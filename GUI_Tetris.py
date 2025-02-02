@@ -1,3 +1,6 @@
+# NOTE : THIS VERSION IS OUTDATED,
+# FOR THE MOST RECENT GO TO MacOS_Tetris.py
+
 import tkinter as tk
 import random as rd
 
