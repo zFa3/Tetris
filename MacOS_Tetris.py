@@ -8,93 +8,62 @@ class Tetris:
         self.BACKGROUND_PIECE = " "
         self.WALL_PIECE = "|"
         self.BOTTOM_PIECE = "_"
+        self.showStringRepresentation = False
 
         self.lines = 0
-        self.SIDE_LEN = 500
-        self.SIDE_LEN = 1500
+        self.SIDE_LEN = 1000
         self.TILE_SIZE = 35
         self.TILES = self.SIDE_LEN // self.TILE_SIZE
         self.LINE_WID = 1
-        self.draw_lines = False
 
         self.gameActive = True
 
         # width and height
         self.dimensions = (10, 22)
-
         self.insta_soft_drop = True
 
-        # randomness variable
-        self.shuffle_bag = 50
-        self.GRAVITY = 8
-        self.colors = {
-            0: "#FF5733",
-            1: "#FFC300",
-            2: "#FF33A1",
-            3: "#33FF57",
-            4: "#33A1FF",
-            5: "#FF5733",
-            6: "#FF33A1",
-            7: "#33FF57",
-            8: "#33A1FF",
-            9: "#FFC300",
-            10:"#FD3F59",
-            11:"#0341AE",
-            12:"#72CB3B",
-            13:"#0FD500",
-            14:"#39892F",
-            15:"#FF3213",
-            16:"#78256F",
-            17:"#01EDFA"
-        }
-        self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
+        # (1 tick -> 10ms)
+        # tick it takes to move auto move down
+        self.GRAVITY = 250
+        # ticks before 'solidification'
+        self.ticks = 15
+
+        self.BACKGROUND_COLOR = "#ECECEC"
+        # self.BACKGROUND_COLOR = self.generate_random_color()
+        
+        # piece colors
+        self.colors = ["#FF5733","#FFC300","#FF33A1","#33FF57","#33A1FF","#FF5733","#FF33A1","#33FF57","#33A1FF","#FFC300","#FD3F59","#0341AE","#72CB3B","#0FD500","#39892F","#FF3213","#78256F","#01EDFA"]
+        self.colors = [self.generate_random_color() for _ in range(18)]
+
         self.U, self.R, self.D, self.L, self.C = (-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)
 
         self.bag_pieces = {
             # J Piece - Clockwise rotations
-            1:[
-                [self.C, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.R],
-            ],
+            1:[[self.C, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.R]],
             # L Piece - Clockwise rotations
-            2:[
-                [self.L, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C],
-            ],
+            2:[[self.L, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C]],
             # o Piece - No rotations
-            3:[
-                [self.U, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C]
-            ],
+            3:[[self.U, self.R, (self.R[0] + self.U[0], self.R[1] + self.U[1]) , self.C]],
             # S Piece - Clockwise rotations
-            4:[
-                [self.D, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.C],
-            ],
+            4:[[self.D, self.L, (self.L[0] + self.U[0], self.L[1] + self.U[1]) , self.C]],
             # Z Piece - Clockwise rotations
-            5:[
-                [self.U, self.L, (self.L[0] + self.D[0], self.L[1] + self.D[1]) , self.C],
-            ],
+            5:[[self.U, self.L, (self.L[0] + self.D[0], self.L[1] + self.D[1]) , self.C]],
             # T Piece - Clockwise Rotations
-            6:[
-                [self.L, self.R, self.U, self.C],
-            ],
+            6:[[self.L, self.R, self.U, self.C]],
             # I piece - Clockwise Rotations
-            7:[
-                [self.L, self.R, (self.R[0] + self.R[0], self.R[1] + self.R[1]) , self.C],
-            ]
+            7:[[self.L, self.R, (self.R[0] + self.R[0], self.R[1] + self.R[1]) , self.C]]
         }
 
         self.piece_rotation = 0  # 0 - 3 index
         self.spawn_coords = [1, 3]
-        self.held = False
         self.moved = 0
+        self.held = False
         self.keypressed = False
         self.piece_spawn = (self.spawn_coords[0] * (self.dimensions[0] + 2) + self.spawn_coords[1]) - 1
         self.pieceCenter = self.piece_spawn
         self.U, self.R, self.D, self.L, self.C = (-(self.dimensions[0] + 2), 1, (self.dimensions[0] + 2), -1, 0)
-        self.pieces = {
-#           "|### #### ###|"
-#           "|#O# #### ###|"
-#           "|### #### ###|"
-#           "|### #### ###|"
 
+        self.pieces = {
             # CLOCKWISE ROTATIONS
 
             # J Piece - Clockwise rotaations
@@ -123,12 +92,6 @@ class Tetris:
                 [self.D, self.L, self.L + self.U, self.C]
             ],
             # Z Piece - Clockwise rotations
-            # 5:[
-            #     [self.R, self.U, self.U + self.L, self.C],
-            #     [self.D, self.R, self.R + self.U, self.C],
-            #     [self.L, self.D, self.D + self.R, self.C],
-            #     [self.U, self.L, self.L + self.D, self.C]
-            # ],
             5:[
                 [self.U, self.L, self.D + self.L, self.C],
                 [self.R, self.U, self.U + self.L, self.C],
@@ -150,22 +113,19 @@ class Tetris:
                 [self.R, self.R + self.U, self.R + self.D, self.R + self.D + self.D]
             ]
         }
+
         self.bag = []
         self.set_bag()
         self.current_piece = self.bag.pop(0)
         self.held_piece = "NONE"
 
-        # ticks per second
-        # frames per second
-        self.fps = 1
-        self.tps = 15
         self.counter = 1
         self.board = self.set_board()
 
         self.root = tk.Tk()
         self.root.geometry(f"{self.SIDE_LEN}x{self.SIDE_LEN}")
         self.game_canvas = tk.Canvas(self.root)
-        self.game_canvas.config(background="#ECECEC")
+        self.game_canvas.config(background=self.BACKGROUND_COLOR)
         self.game_canvas.config(width=self.SIDE_LEN, height=self.SIDE_LEN)
         self.root.title("Tetris")
 
@@ -179,6 +139,13 @@ class Tetris:
         self.root.bind("<space>", self.keypress)
         self.root.bind("c", self.keypress)
         self.root.bind("<Escape>", self.destroy)
+
+    def generate_random_color(self):
+        return "#" + self.generateHex() + self.generateHex() + self.generateHex()
+    
+    def generateHex(self):
+        integer = rd.randint(0, 15)
+        return str(integer if integer < 10 else chr(integer + 55))
 
     def destroy(self, *args):
         self.root.destroy()
@@ -208,26 +175,22 @@ class Tetris:
                     board, ans = self.rotate_piece_once(currentBoard[:])
                     if ans: return board, ans
                     else:
-                        self.pieceCenter = oldCenter
-                        self.pieceCenter += self.D + self.R
+                        self.pieceCenter = oldCenter + self.D + self.R
                         self.piece_rotation = oldRotation
                         board, ans = self.rotate_piece_once(currentBoard[:])
                         if ans: return board, ans
                         else:
-                            self.pieceCenter = oldCenter
-                            self.pieceCenter +=  self.D + self.L
+                            self.pieceCenter = oldCenter + self.D + self.L
                             self.piece_rotation = oldRotation
                             board, ans = self.rotate_piece_once(currentBoard[:])
                             if ans: return board, ans
                             else:
-                                self.pieceCenter = oldCenter      
-                                self.pieceCenter += self.R
+                                self.pieceCenter = oldCenter + self.R
                                 self.piece_rotation = oldRotation
                                 board, ans = self.rotate_piece_once(currentBoard[:])
                                 if ans: return board, ans
                                 else:
-                                    self.pieceCenter = oldCenter
-                                    self.pieceCenter +=  self.U
+                                    self.pieceCenter = oldCenter + self.U
                                     self.piece_rotation = oldRotation
                                     board, ans = self.rotate_piece_once(currentBoard[:])
                                     if ans: return board, ans
@@ -259,7 +222,6 @@ class Tetris:
         rd.shuffle(fullBag)
         self.bag += newBag
         self.bag += fullBag
-        print(self.bag)
 
     def set_board(self):
         board = []
@@ -290,90 +252,51 @@ class Tetris:
         for i in self.pieces[held][self.piece_rotation]:
             self.board[self.piece_spawn + i] = self.ACIVE_PIECE
 
-    def move_left(self, originalBoard):
+    def move_sideways(self, originalBoard, moveRight):
         board = originalBoard[:]
         indexes = []
         for i, t in enumerate(board):
             if t == self.ACIVE_PIECE:
                 indexes.append(i)
-        indexes = sorted(indexes, key=lambda x:x%(self.dimensions[0] + 2))
+        indexes = sorted(indexes, key=lambda x:x%(self.dimensions[0] + 2), reverse = moveRight)
         canMove = True
         for i in indexes:
-            next_index = i + self.L
+            next_index = i + (self.R if moveRight else self.L)
             if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
                 canMove = False
         if canMove:
             for i in indexes:
-                next_index = i + self.L
+                next_index = i + (self.R if moveRight else self.L)
                 board[i] = self.BACKGROUND_PIECE
                 board[next_index] = self.ACIVE_PIECE
-            self.pieceCenter += self.L
-        return board
-    
-    def move_right(self, originalBoard):
-        board = originalBoard[:]
-        indexes = []
-        for i, t in enumerate(board):
-            if t == self.ACIVE_PIECE:
-                indexes.append(i)
-        indexes = sorted(indexes, key=lambda x:x%(self.dimensions[0] + 2), reverse=True)
-        canMove = True
-        for i in indexes:
-            next_index = i + self.R
-            if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
-                canMove = False
-        if canMove:
-            for i in indexes:
-                next_index = i + self.R
-                board[i] = self.BACKGROUND_PIECE
-                board[next_index] = self.ACIVE_PIECE
-            self.pieceCenter += self.R
+            self.pieceCenter += (self.R if moveRight else self.L)
         return board
 
     def move_down(self, originalBoard, insta_soft_drop):
-        if not insta_soft_drop:
-            board = originalBoard[:]
+        board = originalBoard[:]
+        canMove = True
+        trip = True
+        while (canMove and insta_soft_drop) or (canMove and trip):
+            self.pieceCenter += self.D
             indexes = []
             for i, t in enumerate(board):
                 if t == self.ACIVE_PIECE:
                     indexes.append(i)
-            indexes = sorted(indexes, reverse=True)
-            canMove = True
+            indexes = sorted(indexes, reverse = True)
+            if not indexes:
+                break
             for i in indexes:
                 next_index = i + self.D
                 if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
                     canMove = False
-                    #print(board[next_index], next_index, i, board[i])
             if canMove:
                 for i in indexes:
                     next_index = i + self.D
                     board[i] = self.BACKGROUND_PIECE
                     board[next_index] = self.ACIVE_PIECE
-                self.pieceCenter += self.D
-            return board, canMove
-        else:
-            board = originalBoard[:]
-            canMove = True
-            while canMove:
-                self.pieceCenter += self.D
-                indexes = []
-                for i, t in enumerate(board):
-                    if t == self.ACIVE_PIECE:
-                        indexes.append(i)
-                indexes = sorted(indexes, reverse=True)
-                if not indexes:
-                    break
-                for i in indexes:
-                    next_index = i + self.D
-                    if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
-                        canMove = False
-                if canMove:
-                    for i in indexes:
-                        next_index = i + self.D
-                        board[i] = self.BACKGROUND_PIECE
-                        board[next_index] = self.ACIVE_PIECE
-            self.pieceCenter -= self.D
-            return board, canMove
+            trip = False
+        if insta_soft_drop: self.pieceCenter -= self.D
+        return board, canMove
     
     def hard_drop(self, originalBoard) -> str:
         board = originalBoard[:]
@@ -384,13 +307,11 @@ class Tetris:
                 if t == self.ACIVE_PIECE:
                     indexes.append(i)
             indexes = sorted(indexes, reverse=True)
-            if not indexes:
-                break
+            if not indexes: break
             for i in indexes:
                 next_index = i + self.D
                 if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
                     canMove = False
-                    #print(board[next_index], next_index, i, board[i])
             if canMove:
                 for i in indexes:
                     next_index = i + self.D
@@ -410,57 +331,26 @@ class Tetris:
             next_index = i + self.U
             if board[next_index] != self.BACKGROUND_PIECE and board[next_index] != self.ACIVE_PIECE:
                 canMove = False
-                #print(board[next_index], next_index, i, board[i])
         if canMove:
             for i in indexes:
                 next_index = i + self.U
                 board[i] = self.BACKGROUND_PIECE
                 board[next_index] = self.ACIVE_PIECE
         return board
-
-    def print_board(self, board):
-        print("\033c")
-        for i in range(self.dimensions[1] + 1):
-            for j in range(self.dimensions[0] + 2):
-                try:
-                    #if i * (self.dimensions[0] + 2) + j == self.pieceCenter:
-                    #    print("O", end = "")
-                    #else:
-                    print(board[i * (self.dimensions[0] + 2) + j], end = "")
-                except: pass
-            print()
-    
-    def print_debug(self, board):
-        for i in range(self.dimensions[1] + 1):
-            for j in range(self.dimensions[0] + 2):
-                try:
-                    if i * (self.dimensions[0] + 2) + j == self.pieceCenter:
-                        print("O")
-                    elif board[i * (self.dimensions[0] + 2) + j] == self.ACIVE_PIECE:
-                        print(board[i * (self.dimensions[0] + 2) + j], end = "")
-                    else:
-                        print(" ", end = "")
-                        #print(i * (self.dimensions[0] + 2) + j, end = "")
-                except: pass
-            print()
     
     def solidify(self):
-        self.held = False
-        n = []
-        for i in self.board:
-            if i == self.ACIVE_PIECE:
-                n.append(self.PASSIVE_PIECE)
-            else: n.append(i)
+        # once we drop a piece, we can now hold again
+        self.held = False; n = []
+        for i in self.board: n.append(self.PASSIVE_PIECE if i == self.ACIVE_PIECE else i)
         return n
 
     def game_tick(self):
         # move all elements down
         #self.board, moved = self.move_down(self.board)
-        
         # check if there are any filled lines
         self.find_filled()
-        if self.board == self.set_board() and self.keypressed:
-            self.moved = 50; self.lines += 3
+        # if self.board == self.set_board() and self.keypressed:
+        #     self.moved = 50; self.lines += 3
             # clear the filled lines
         # check if you lost the game
             # close the program
@@ -500,7 +390,7 @@ class Tetris:
                 self.board, a = self.rotate_piece(self.board, -1)
                 self.draw()
             elif key.keycode == 2063660802:
-                self.board = self.move_left(self.board)
+                self.board = self.move_sideways(self.board, False)
                 self.draw()
             elif key.keycode == 822083616:
                 self.board = self.hard_drop(self.board)
@@ -516,7 +406,7 @@ class Tetris:
                 self.board, a = self.move_down(self.board, self.insta_soft_drop)
                 self.draw()
             elif key.keycode == 2080438019:
-                self.board = self.move_right(self.board)
+                self.board = self.move_sideways(self.board, True)
                 self.draw()
             elif key.char == ("c") and not self.held:
                 self.held = True
@@ -539,7 +429,6 @@ class Tetris:
         tick = 0
         while self.gameActive:
             self.game_tick()
-            #tm.sleep(1/self.fps)
             self.add_piece()
                 # check if you can move the element down
                     # move down
@@ -547,7 +436,7 @@ class Tetris:
             if tick > self.GRAVITY:
                 a, cnMove = self.move_down(self.board, False)
                 if not cnMove:
-                    if self.counter > 15:
+                    if self.counter > (self.ticks):
                         self.counter = 0
                         self.board = self.solidify()
                     else:
@@ -562,22 +451,21 @@ class Tetris:
     def pad_board(self, board) -> list:
         new_list = []
         for i in range(self.dimensions[1] + 1):
-            #new_list.append(" " * (self.TILES - (self.dimensions[0] + 2)))
-            for a in range(self.dimensions[0] + 2):
-                new_list.append(board[i * (self.dimensions[0] + 2) + a])
-            for _ in range((self.TILES - (self.dimensions[0] + 2))):
-                new_list.append(" ")
+            for a in range(self.dimensions[0] + 2): new_list.append(board[i * (self.dimensions[0] + 2) + a])
+            for _ in range((self.TILES - (self.dimensions[0] + 2))): new_list.append(" ")
         return new_list
 
     def format(self, hex):
-        if len(hex) != 2:
-            hex = "0" + hex
-        return hex
+        return hex if len(hex) == 2 else "0" + hex
 
     def draw(self):
+        # delete the entire frame
         self.game_canvas.delete("all")
+        # create the score in the background
         self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text = self.lines, font=("Courier new", 150, "bold"), fill="#E5E5E5")
+        # if there are no more pieces left on the board
         if self.moved > 1:
+            # create the all clear text
             self.game_canvas.create_text(self.SIDE_LEN//2, self.SIDE_LEN//2, text="ALL CLEAR", font=("Arial", int(abs(self.moved * 1.3 - 30))), angle=(self.moved * 3.6)%360, fill=f"#{self.format(hex((self.moved * 3)%255)[2:])}{self.format(hex((self.moved * 5)%255)[2:])}{self.format(hex((self.moved * 175)%255)[2:])}")
             self.moved -= 2
         else:
@@ -586,7 +474,7 @@ class Tetris:
             ind_col, ind_row = index // (self.SIDE_LEN//self.TILE_SIZE), index % (self.SIDE_LEN//self.TILE_SIZE)
             if item == self.ACIVE_PIECE:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "#8EE6DB", outline="white")
-        if self.draw_lines:
+        if self.LINE_WID > 0:
             for line in range(self.SIDE_LEN//self.TILE_SIZE):
                 # iterates creating the vertical lines
                 self.game_canvas.create_line(line * self.TILE_SIZE, 0, line*self.TILE_SIZE, self.SIDE_LEN, width = self.LINE_WID)
@@ -601,26 +489,27 @@ class Tetris:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "grey")
             if item == self.WALL_PIECE or item == self.BOTTOM_PIECE:
                 self.game_canvas.create_rectangle((ind_row) * self.TILE_SIZE, (ind_col) * self.TILE_SIZE, (ind_row + 1) * self.TILE_SIZE, (ind_col + 1) * self.TILE_SIZE, fill = "black")
-        '''
-            self.game_canvas.create_text((ind_row + 0.5) * self.TILE_SIZE, (ind_col + 0.5) * self.TILE_SIZE, text=item, font=("Arial", 15))
-        '''
+            if self.showStringRepresentation: self.game_canvas.create_text((ind_row + 0.5) * self.TILE_SIZE, (ind_col + 0.5) * self.TILE_SIZE, text=item, font=("Arial", 15))
         for i in range(5):
             if len(self.bag) < 5:
                 self.set_bag()
             self.draw_Pieces((25, (i * 5 + 3)), self.bag[i], self.colors[int(self.bag[i]) % len(self.colors)])
         try: self.draw_Pieces((15, 3), self.held_piece, self.colors[int(self.held_piece) % len(self.colors)])
         except: pass
+
+        # update and pack the main frame
         self.game_canvas.update()
         self.game_canvas.pack()
 
+    # draw the different pieces
     def draw_Pieces(self, starting, piece, color):
         for item in self.bag_pieces[piece][0]:
-            row_index, col_index = starting[0], starting[1]
-            row_index += item[1]
-            col_index += item[0  ]
+            row_index, col_index = starting[0] + item[1], starting[1] + item[0]
             self.game_canvas.create_rectangle(row_index * self.TILE_SIZE, col_index * self.TILE_SIZE, (row_index + 1) * self.TILE_SIZE, (col_index + 1) * self.TILE_SIZE, fill = color)
-            #self.game_canvas.create_text((row_index + 0.5) * self.TILE_SIZE, (col_index + 0.5) * self.TILE_SIZE,text=str(item[1]),font=("Arial", 15))
 
+    # highlight the active piece's shadow by
+    # creating a new board and hard dropping the piece
+    # on the copy board
     def highlight_piece(self):
         board = self.hard_drop(self.board)
         return board
