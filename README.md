@@ -4,8 +4,6 @@
     
 # About    
 Written fully in python, and uses the library Tkinter, pre built into the python package. Players control the falling tetrominoes (shapes made of four blocks) by rotating, moving, and dropping them into place to form complete lines. The game continues until the screen fills up, and no more pieces can be placed.  
-Note: use the correct file depending on OS  
-
   
 # Keybinds  
 c - hold  
