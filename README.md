@@ -15,5 +15,5 @@ arrow keys - movement
 space - hard drop  
   
 # Prerequisites  
-_python 3_  
+_python 3.9+_  
 _tkinter (preinstalled)_
